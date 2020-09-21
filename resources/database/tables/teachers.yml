@@ -1,0 +1,28 @@
+Resources:
+  TeachersTable:
+    Type: AWS::DynamoDB::Table
+    Properties:
+      TableName: ${self:custom.teachersTable}
+      AttributeDefinitions:
+        - AttributeName: teacherId
+          AttributeType: S
+        - AttributeName: schoolId
+          AttributeType: S
+      KeySchema:
+        - AttributeName: teacherId
+          KeyType: HASH
+        - AttributeName: schoolId
+          KeyType: RANGE
+      BillingMode: PROVISIONED
+      ProvisionedThroughput:
+        ReadCapacityUnits: 1
+        WriteCapacityUnits: 1
+
+Outputs:
+  TeachersTableArn:
+    Value:
+      Fn::GetAtt:
+        - TeachersTable
+        - Arn
+    Export:
+      Name: ${self:custom.stage}-ExtTeachersTableArn

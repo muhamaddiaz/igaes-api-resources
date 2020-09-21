@@ -1,0 +1,28 @@
+Resources:
+  StudentsTable:
+    Type: AWS::DynamoDB::Table
+    Properties:
+      TableName: ${self:custom.studentsTable}
+      AttributeDefinitions:
+        - AttributeName: studentId
+          AttributeType: S
+        - AttributeName: parentId
+          AttributeType: S
+      KeySchema:
+        - AttributeName: studentId
+          KeyType: HASH
+        - AttributeName: parentId
+          KeyType: RANGE
+      BillingMode: PROVISIONED
+      ProvisionedThroughput:
+        ReadCapacityUnits: 1
+        WriteCapacityUnits: 1
+
+Outputs:
+  StudentsTableArn:
+    Value:
+      Fn::GetAtt:
+        - StudentsTable
+        - Arn
+    Export:
+      Name: ${self:custom.stage}-ExtStudentsTableArn

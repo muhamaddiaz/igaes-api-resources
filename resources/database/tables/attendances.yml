@@ -1,0 +1,28 @@
+Resources:
+  AttendancesTable:
+    Type: AWS::DynamoDB::Table
+    Properties:
+      TableName: ${self:custom.attendancesTable}
+      AttributeDefinitions:
+        - AttributeName: attendanceId
+          AttributeType: S
+        - AttributeName: studentId
+          AttributeType: S
+      KeySchema:
+        - AttributeName: attendanceId
+          KeyType: HASH
+        - AttributeName: studentId
+          KeyType: RANGE
+      BillingMode: PROVISIONED
+      ProvisionedThroughput:
+        ReadCapacityUnits: 1
+        WriteCapacityUnits: 1
+
+Outputs:
+  AttendancesTableArn:
+    Value:
+      Fn::GetAtt:
+        - AttendancesTable
+        - Arn
+    Export:
+      Name: ${self:custom.stage}-ExtAttendancesTableArn

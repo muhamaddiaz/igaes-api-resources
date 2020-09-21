@@ -1,0 +1,449 @@
+{
+  "service": {
+    "service": "igaes-api-resources-auth",
+    "serviceObject": {
+      "name": "igaes-api-resources-auth"
+    },
+    "provider": {
+      "stage": "dev",
+      "variableSyntax": "\\${([^{}]+?)}",
+      "name": "aws",
+      "region": "ap-southeast-1",
+      "versionFunctions": true,
+      "remoteFunctionData": null,
+      "compiledCloudFormationTemplate": {
+        "AWSTemplateFormatVersion": "2010-09-09",
+        "Description": "The AWS CloudFormation template for this Serverless application",
+        "Resources": {
+          "ServerlessDeploymentBucket": {
+            "Type": "AWS::S3::Bucket",
+            "Properties": {
+              "BucketEncryption": {
+                "ServerSideEncryptionConfiguration": [
+                  {
+                    "ServerSideEncryptionByDefault": {
+                      "SSEAlgorithm": "AES256"
+                    }
+                  }
+                ]
+              }
+            }
+          },
+          "ServerlessDeploymentBucketPolicy": {
+            "Type": "AWS::S3::BucketPolicy",
+            "Properties": {
+              "Bucket": {
+                "Ref": "ServerlessDeploymentBucket"
+              },
+              "PolicyDocument": {
+                "Statement": [
+                  {
+                    "Action": "s3:*",
+                    "Effect": "Deny",
+                    "Principal": "*",
+                    "Resource": [
+                      {
+                        "Fn::Join": [
+                          "",
+                          [
+                            "arn:",
+                            {
+                              "Ref": "AWS::Partition"
+                            },
+                            ":s3:::",
+                            {
+                              "Ref": "ServerlessDeploymentBucket"
+                            },
+                            "/*"
+                          ]
+                        ]
+                      }
+                    ],
+                    "Condition": {
+                      "Bool": {
+                        "aws:SecureTransport": false
+                      }
+                    }
+                  }
+                ]
+              }
+            }
+          },
+          "IgaesUserPool": {
+            "Type": "AWS::Cognito::UserPool",
+            "Properties": {
+              "UserPoolName": "dev-IgaesUserPool",
+              "UsernameAttributes": [
+                "email"
+              ],
+              "AutoVerifiedAttributes": [
+                "email"
+              ]
+            }
+          },
+          "IgaesUserPoolClient": {
+            "Type": "AWS::Cognito::UserPoolClient",
+            "Properties": {
+              "ClientName": "dev-IgaesUserPoolClient",
+              "UserPoolId": {
+                "Ref": "IgaesUserPool"
+              },
+              "ExplicitAuthFlows": [
+                "ADMIN_NO_SRP_AUTH"
+              ],
+              "GenerateSecret": false
+            }
+          },
+          "IgaesIdentityPool": {
+            "Type": "AWS::Cognito::IdentityPool",
+            "Properties": {
+              "IdentityPoolName": "dev-IgaesIdentityPool",
+              "AllowUnauthenticatedIdentities": false,
+              "CognitoIdentityProviders": [
+                {
+                  "ClientId": {
+                    "Ref": "IgaesUserPoolClient"
+                  },
+                  "ProviderName": {
+                    "Fn::GetAtt": [
+                      "IgaesUserPool",
+                      "ProviderName"
+                    ]
+                  }
+                }
+              ]
+            }
+          },
+          "IgaesAuthRole": {
+            "Type": "AWS::IAM::Role",
+            "Properties": {
+              "Path": "/",
+              "AssumeRolePolicyDocument": {
+                "Version": "2012-10-17",
+                "Statement": [
+                  {
+                    "Effect": "Allow",
+                    "Principal": {
+                      "Federated": "cognito-identity.amazonaws.com"
+                    },
+                    "Action": [
+                      "sts:AssumeRoleWithWebIdentity"
+                    ],
+                    "Condition": {
+                      "StringEquals": {
+                        "cognito-identity.amazonaws.com:aud": {
+                          "Ref": "IgaesIdentityPool"
+                        }
+                      },
+                      "ForAnyValue:StringLike": {
+                        "cognito-identity.amazonaws.com:amr": "authenticated"
+                      }
+                    }
+                  }
+                ]
+              },
+              "Policies": [
+                {
+                  "PolicyName": "IgaesAuthorizedPolicy",
+                  "PolicyDocument": {
+                    "Version": "2012-10-17",
+                    "Statement": [
+                      {
+                        "Effect": "Allow",
+                        "Action": [
+                          "mobileanalytics:PutEvents",
+                          "cognito-sync:*",
+                          "cognito-identity:*"
+                        ],
+                        "Resource": "*"
+                      },
+                      {
+                        "Effect": "Allow",
+                        "Action": [
+                          "s3:*"
+                        ],
+                        "Resource": [
+                          {
+                            "Fn::Join": [
+                              "",
+                              [
+                                {
+                                  "Fn::ImportValue": "dev-ExtIgaesBucketArn"
+                                },
+                                "/private/",
+                                "$",
+                                "{cognito-identity.amazonaws.com:sub}/*"
+                              ]
+                            ]
+                          }
+                        ]
+                      }
+                    ]
+                  }
+                }
+              ]
+            }
+          }
+        },
+        "Outputs": {
+          "ServerlessDeploymentBucketName": {
+            "Value": {
+              "Ref": "ServerlessDeploymentBucket"
+            }
+          },
+          "UserPoolId": {
+            "Value": {
+              "Ref": "IgaesUserPool"
+            }
+          },
+          "UserPoolClientId": {
+            "Value": {
+              "Ref": "IgaesUserPoolClient"
+            }
+          },
+          "IdentityPoolId": {
+            "Value": {
+              "Ref": "IgaesIdentityPool"
+            }
+          },
+          "CognitoAuthRole": {
+            "Value": {
+              "Ref": "IgaesAuthRole"
+            },
+            "Export": {
+              "Name": "ExtIgaesAuthRole-dev"
+            }
+          }
+        }
+      },
+      "coreCloudFormationTemplate": {
+        "AWSTemplateFormatVersion": "2010-09-09",
+        "Description": "The AWS CloudFormation template for this Serverless application",
+        "Resources": {
+          "ServerlessDeploymentBucket": {
+            "Type": "AWS::S3::Bucket",
+            "Properties": {
+              "BucketEncryption": {
+                "ServerSideEncryptionConfiguration": [
+                  {
+                    "ServerSideEncryptionByDefault": {
+                      "SSEAlgorithm": "AES256"
+                    }
+                  }
+                ]
+              }
+            }
+          },
+          "ServerlessDeploymentBucketPolicy": {
+            "Type": "AWS::S3::BucketPolicy",
+            "Properties": {
+              "Bucket": {
+                "Ref": "ServerlessDeploymentBucket"
+              },
+              "PolicyDocument": {
+                "Statement": [
+                  {
+                    "Action": "s3:*",
+                    "Effect": "Deny",
+                    "Principal": "*",
+                    "Resource": [
+                      {
+                        "Fn::Join": [
+                          "",
+                          [
+                            "arn:",
+                            {
+                              "Ref": "AWS::Partition"
+                            },
+                            ":s3:::",
+                            {
+                              "Ref": "ServerlessDeploymentBucket"
+                            },
+                            "/*"
+                          ]
+                        ]
+                      }
+                    ],
+                    "Condition": {
+                      "Bool": {
+                        "aws:SecureTransport": false
+                      }
+                    }
+                  }
+                ]
+              }
+            }
+          }
+        },
+        "Outputs": {
+          "ServerlessDeploymentBucketName": {
+            "Value": {
+              "Ref": "ServerlessDeploymentBucket"
+            }
+          }
+        }
+      }
+    },
+    "custom": {
+      "stage": "dev"
+    },
+    "pluginsData": {},
+    "functions": {},
+    "resources": {
+      "Resources": {
+        "IgaesUserPool": {
+          "Type": "AWS::Cognito::UserPool",
+          "Properties": {
+            "UserPoolName": "dev-IgaesUserPool",
+            "UsernameAttributes": [
+              "email"
+            ],
+            "AutoVerifiedAttributes": [
+              "email"
+            ]
+          }
+        },
+        "IgaesUserPoolClient": {
+          "Type": "AWS::Cognito::UserPoolClient",
+          "Properties": {
+            "ClientName": "dev-IgaesUserPoolClient",
+            "UserPoolId": {
+              "Ref": "IgaesUserPool"
+            },
+            "ExplicitAuthFlows": [
+              "ADMIN_NO_SRP_AUTH"
+            ],
+            "GenerateSecret": false
+          }
+        },
+        "IgaesIdentityPool": {
+          "Type": "AWS::Cognito::IdentityPool",
+          "Properties": {
+            "IdentityPoolName": "dev-IgaesIdentityPool",
+            "AllowUnauthenticatedIdentities": false,
+            "CognitoIdentityProviders": [
+              {
+                "ClientId": {
+                  "Ref": "IgaesUserPoolClient"
+                },
+                "ProviderName": {
+                  "Fn::GetAtt": [
+                    "IgaesUserPool",
+                    "ProviderName"
+                  ]
+                }
+              }
+            ]
+          }
+        },
+        "IgaesAuthRole": {
+          "Type": "AWS::IAM::Role",
+          "Properties": {
+            "Path": "/",
+            "AssumeRolePolicyDocument": {
+              "Version": "2012-10-17",
+              "Statement": [
+                {
+                  "Effect": "Allow",
+                  "Principal": {
+                    "Federated": "cognito-identity.amazonaws.com"
+                  },
+                  "Action": [
+                    "sts:AssumeRoleWithWebIdentity"
+                  ],
+                  "Condition": {
+                    "StringEquals": {
+                      "cognito-identity.amazonaws.com:aud": {
+                        "Ref": "IgaesIdentityPool"
+                      }
+                    },
+                    "ForAnyValue:StringLike": {
+                      "cognito-identity.amazonaws.com:amr": "authenticated"
+                    }
+                  }
+                }
+              ]
+            },
+            "Policies": [
+              {
+                "PolicyName": "IgaesAuthorizedPolicy",
+                "PolicyDocument": {
+                  "Version": "2012-10-17",
+                  "Statement": [
+                    {
+                      "Effect": "Allow",
+                      "Action": [
+                        "mobileanalytics:PutEvents",
+                        "cognito-sync:*",
+                        "cognito-identity:*"
+                      ],
+                      "Resource": "*"
+                    },
+                    {
+                      "Effect": "Allow",
+                      "Action": [
+                        "s3:*"
+                      ],
+                      "Resource": [
+                        {
+                          "Fn::Join": [
+                            "",
+                            [
+                              {
+                                "Fn::ImportValue": "dev-ExtIgaesBucketArn"
+                              },
+                              "/private/",
+                              "$",
+                              "{cognito-identity.amazonaws.com:sub}/*"
+                            ]
+                          ]
+                        }
+                      ]
+                    }
+                  ]
+                }
+              }
+            ]
+          }
+        }
+      },
+      "Outputs": {
+        "UserPoolId": {
+          "Value": {
+            "Ref": "IgaesUserPool"
+          }
+        },
+        "UserPoolClientId": {
+          "Value": {
+            "Ref": "IgaesUserPoolClient"
+          }
+        },
+        "IdentityPoolId": {
+          "Value": {
+            "Ref": "IgaesIdentityPool"
+          }
+        },
+        "CognitoAuthRole": {
+          "Value": {
+            "Ref": "IgaesAuthRole"
+          },
+          "Export": {
+            "Name": "ExtIgaesAuthRole-dev"
+          }
+        }
+      }
+    },
+    "serviceFilename": "serverless.yml",
+    "app": "igaes-app",
+    "org": "muhamaddiaz",
+    "layers": {},
+    "isDashboardMonitoringPreconfigured": true,
+    "isDashboardAppPreconfigured": true,
+    "appUid": "vDdCk6QYfld75XFrrl",
+    "orgUid": "khl7cv0NWdwHP2sCxd"
+  },
+  "package": {
+    "artifactDirectoryName": "serverless/igaes-api-resources-auth/dev/1594821638920-2020-07-15T14:00:38.920Z",
+    "artifact": ""
+  }
+}

@@ -1,0 +1,269 @@
+{
+  "AWSTemplateFormatVersion": "2010-09-09",
+  "Description": "The AWS CloudFormation template for this Serverless application",
+  "Resources": {
+    "ServerlessDeploymentBucket": {
+      "Type": "AWS::S3::Bucket",
+      "Properties": {
+        "BucketEncryption": {
+          "ServerSideEncryptionConfiguration": [
+            {
+              "ServerSideEncryptionByDefault": {
+                "SSEAlgorithm": "AES256"
+              }
+            }
+          ]
+        }
+      }
+    },
+    "ServerlessDeploymentBucketPolicy": {
+      "Type": "AWS::S3::BucketPolicy",
+      "Properties": {
+        "Bucket": {
+          "Ref": "ServerlessDeploymentBucket"
+        },
+        "PolicyDocument": {
+          "Statement": [
+            {
+              "Action": "s3:*",
+              "Effect": "Deny",
+              "Principal": "*",
+              "Resource": [
+                {
+                  "Fn::Join": [
+                    "",
+                    [
+                      "arn:",
+                      {
+                        "Ref": "AWS::Partition"
+                      },
+                      ":s3:::",
+                      {
+                        "Ref": "ServerlessDeploymentBucket"
+                      },
+                      "/*"
+                    ]
+                  ]
+                }
+              ],
+              "Condition": {
+                "Bool": {
+                  "aws:SecureTransport": false
+                }
+              }
+            }
+          ]
+        }
+      }
+    },
+    "AttendancesTable": {
+      "Type": "AWS::DynamoDB::Table",
+      "Properties": {
+        "TableName": "dev-igaes-attendances",
+        "AttributeDefinitions": [
+          {
+            "AttributeName": "attendanceId",
+            "AttributeType": "S"
+          },
+          {
+            "AttributeName": "studentId",
+            "AttributeType": "S"
+          }
+        ],
+        "KeySchema": [
+          {
+            "AttributeName": "attendanceId",
+            "KeyType": "HASH"
+          },
+          {
+            "AttributeName": "studentId",
+            "KeyType": "RANGE"
+          }
+        ],
+        "BillingMode": "PROVISIONED",
+        "ProvisionedThroughput": {
+          "ReadCapacityUnits": 1,
+          "WriteCapacityUnits": 1
+        }
+      }
+    },
+    "StudentsTable": {
+      "Type": "AWS::DynamoDB::Table",
+      "Properties": {
+        "TableName": "dev-igaes-students",
+        "AttributeDefinitions": [
+          {
+            "AttributeName": "studentId",
+            "AttributeType": "S"
+          },
+          {
+            "AttributeName": "parentId",
+            "AttributeType": "S"
+          }
+        ],
+        "KeySchema": [
+          {
+            "AttributeName": "studentId",
+            "KeyType": "HASH"
+          },
+          {
+            "AttributeName": "parentId",
+            "KeyType": "RANGE"
+          }
+        ],
+        "BillingMode": "PROVISIONED",
+        "ProvisionedThroughput": {
+          "ReadCapacityUnits": 1,
+          "WriteCapacityUnits": 1
+        }
+      }
+    },
+    "ParentsTable": {
+      "Type": "AWS::DynamoDB::Table",
+      "Properties": {
+        "TableName": "dev-igaes-parents",
+        "AttributeDefinitions": [
+          {
+            "AttributeName": "parentId",
+            "AttributeType": "S"
+          },
+          {
+            "AttributeName": "studentId",
+            "AttributeType": "S"
+          }
+        ],
+        "KeySchema": [
+          {
+            "AttributeName": "parentId",
+            "KeyType": "HASH"
+          },
+          {
+            "AttributeName": "studentId",
+            "KeyType": "RANGE"
+          }
+        ],
+        "BillingMode": "PROVISIONED",
+        "ProvisionedThroughput": {
+          "ReadCapacityUnits": 1,
+          "WriteCapacityUnits": 1
+        }
+      }
+    },
+    "TeachersTable": {
+      "Type": "AWS::DynamoDB::Table",
+      "Properties": {
+        "TableName": "dev-igaes-teachers",
+        "AttributeDefinitions": [
+          {
+            "AttributeName": "teacherId",
+            "AttributeType": "S"
+          },
+          {
+            "AttributeName": "schoolId",
+            "AttributeType": "S"
+          }
+        ],
+        "KeySchema": [
+          {
+            "AttributeName": "teacherId",
+            "KeyType": "HASH"
+          },
+          {
+            "AttributeName": "schoolId",
+            "KeyType": "RANGE"
+          }
+        ],
+        "BillingMode": "PROVISIONED",
+        "ProvisionedThroughput": {
+          "ReadCapacityUnits": 1,
+          "WriteCapacityUnits": 1
+        }
+      }
+    },
+    "SchoolsTable": {
+      "Type": "AWS::DynamoDB::Table",
+      "Properties": {
+        "TableName": "dev-igaes-schools",
+        "AttributeDefinitions": [
+          {
+            "AttributeName": "schoolId",
+            "AttributeType": "S"
+          }
+        ],
+        "KeySchema": [
+          {
+            "AttributeName": "schoolId",
+            "KeyType": "HASH"
+          }
+        ],
+        "BillingMode": "PROVISIONED",
+        "ProvisionedThroughput": {
+          "ReadCapacityUnits": 1,
+          "WriteCapacityUnits": 1
+        }
+      }
+    }
+  },
+  "Outputs": {
+    "ServerlessDeploymentBucketName": {
+      "Value": {
+        "Ref": "ServerlessDeploymentBucket"
+      }
+    },
+    "AttendancesTableArn": {
+      "Value": {
+        "Fn::GetAtt": [
+          "AttendancesTable",
+          "Arn"
+        ]
+      },
+      "Export": {
+        "Name": "dev-ExtAttendancesTableArn"
+      }
+    },
+    "StudentsTableArn": {
+      "Value": {
+        "Fn::GetAtt": [
+          "StudentsTable",
+          "Arn"
+        ]
+      },
+      "Export": {
+        "Name": "dev-ExtStudentsTableArn"
+      }
+    },
+    "ParentsTableArn": {
+      "Value": {
+        "Fn::GetAtt": [
+          "ParentsTable",
+          "Arn"
+        ]
+      },
+      "Export": {
+        "Name": "dev-ExtParentsTableArn"
+      }
+    },
+    "TeachersTableArn": {
+      "Value": {
+        "Fn::GetAtt": [
+          "TeachersTable",
+          "Arn"
+        ]
+      },
+      "Export": {
+        "Name": "dev-ExtTeachersTableArn"
+      }
+    },
+    "SchoolsTableArn": {
+      "Value": {
+        "Fn::GetAtt": [
+          "SchoolsTable",
+          "Arn"
+        ]
+      },
+      "Export": {
+        "Name": "dev-ExtSchoolsTableArn"
+      }
+    }
+  }
+}

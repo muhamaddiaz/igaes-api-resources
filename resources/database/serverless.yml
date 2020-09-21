@@ -1,0 +1,150 @@
+org: muhamaddiaz
+app: igaes-app
+service: igaes-api-resources-database
+
+custom:
+  stage: ${opt:stage, self:provider.stage}
+  attendancesTable: ${self:custom.stage}-igaes-attendances
+  studentsTable: ${self:custom.stage}-igaes-students
+  parentsTable: ${self:custom.stage}-igaes-parents
+  schoolsTable: ${self:custom.stage}-igaes-schools
+  teachersTable: ${self:custom.stage}-igaes-teachers
+
+provider:
+  name: aws
+  stage: dev
+  region: ap-southeast-1
+
+resources:
+  Resources:
+    AttendancesTable:
+      Type: AWS::DynamoDB::Table
+      Properties:
+        TableName: ${self:custom.attendancesTable}
+        AttributeDefinitions:
+          - AttributeName: attendanceId
+            AttributeType: S
+          - AttributeName: studentId
+            AttributeType: S
+        KeySchema:
+          - AttributeName: attendanceId
+            KeyType: HASH
+          - AttributeName: studentId
+            KeyType: RANGE
+        BillingMode: PROVISIONED
+        ProvisionedThroughput:
+          ReadCapacityUnits: 1
+          WriteCapacityUnits: 1
+
+    StudentsTable:
+      Type: AWS::DynamoDB::Table
+      Properties:
+        TableName: ${self:custom.studentsTable}
+        AttributeDefinitions:
+          - AttributeName: studentId
+            AttributeType: S
+          - AttributeName: parentId
+            AttributeType: S
+        KeySchema:
+          - AttributeName: studentId
+            KeyType: HASH
+          - AttributeName: parentId
+            KeyType: RANGE
+        BillingMode: PROVISIONED
+        ProvisionedThroughput:
+          ReadCapacityUnits: 1
+          WriteCapacityUnits: 1
+
+    ParentsTable:
+      Type: AWS::DynamoDB::Table
+      Properties:
+        TableName: ${self:custom.parentsTable}
+        AttributeDefinitions:
+          - AttributeName: parentId
+            AttributeType: S
+          - AttributeName: studentId
+            AttributeType: S
+        KeySchema:
+          - AttributeName: parentId
+            KeyType: HASH
+          - AttributeName: studentId
+            KeyType: RANGE
+        BillingMode: PROVISIONED
+        ProvisionedThroughput:
+          ReadCapacityUnits: 1
+          WriteCapacityUnits: 1
+
+    TeachersTable:
+      Type: AWS::DynamoDB::Table
+      Properties:
+        TableName: ${self:custom.teachersTable}
+        AttributeDefinitions:
+          - AttributeName: teacherId
+            AttributeType: S
+          - AttributeName: schoolId
+            AttributeType: S
+        KeySchema:
+          - AttributeName: teacherId
+            KeyType: HASH
+          - AttributeName: schoolId
+            KeyType: RANGE
+        BillingMode: PROVISIONED
+        ProvisionedThroughput:
+          ReadCapacityUnits: 1
+          WriteCapacityUnits: 1
+
+    SchoolsTable:
+      Type: AWS::DynamoDB::Table
+      Properties:
+        TableName: ${self:custom.schoolsTable}
+        AttributeDefinitions:
+          - AttributeName: schoolId
+            AttributeType: S
+        KeySchema:
+          - AttributeName: schoolId
+            KeyType: HASH
+        BillingMode: PROVISIONED
+        ProvisionedThroughput:
+          ReadCapacityUnits: 1
+          WriteCapacityUnits: 1
+
+  Outputs:
+    AttendancesTableArn:
+      Value:
+        Fn::GetAtt:
+          - AttendancesTable
+          - Arn
+      Export:
+        Name: ${self:custom.stage}-ExtAttendancesTableArn
+
+    StudentsTableArn:
+      Value:
+        Fn::GetAtt:
+          - StudentsTable
+          - Arn
+      Export:
+        Name: ${self:custom.stage}-ExtStudentsTableArn
+
+    ParentsTableArn:
+      Value:
+        Fn::GetAtt:
+          - ParentsTable
+          - Arn
+      Export:
+        Name: ${self:custom.stage}-ExtParentsTableArn
+
+    TeachersTableArn:
+      Value:
+        Fn::GetAtt:
+          - TeachersTable
+          - Arn
+      Export:
+        Name: ${self:custom.stage}-ExtTeachersTableArn
+
+    SchoolsTableArn:
+      Value:
+        Fn::GetAtt:
+          - SchoolsTable
+          - Arn
+      Export:
+        Name: ${self:custom.stage}-ExtSchoolsTableArn

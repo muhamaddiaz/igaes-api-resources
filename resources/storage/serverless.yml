@@ -1,0 +1,45 @@
+org: muhamaddiaz
+app: igaes-app
+service: igaes-api-resources-storage
+
+custom:
+  stage: ${opt:stage, self:provider.stage}
+
+provider:
+  name: aws
+  stage: dev
+  region: ap-southeast-1
+
+resources:
+  Resources:
+    IgaesBucket:
+      Type: AWS::S3::Bucket
+      Properties:
+        CorsConfiguration:
+          CorsRules:
+            - AllowedOrigins:
+                - "*"
+              AllowedHeaders:
+                - "*"
+              AllowedMethods:
+                - GET
+                - POST
+                - PUT
+                - DELETE
+                - HEAD
+              MaxAge: 3000
+
+  Outputs:
+    IgaesBucketArn:
+      Value:
+        Fn::GetAtt:
+          - IgaesBucket
+          - Arn
+      Export:
+        Name: ${self:custom.stage}-ExtIgaesBucketArn
+
+    IgaesBucketName:
+      Value:
+        Ref: IgaesBucket
+      Export:
+        Name: ${self:custom.stage}-ExtIgaesBucket
